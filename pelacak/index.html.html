@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Information</title>
+</head>
+<body>
+    <h1>Device Information</h1>
+    <p id="ip"></p>
+    <p id="user-agent"></p>
+    <p id="coordinates"></p>
+    <p id="battery"></p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            getDeviceInfo();
+        });
+
+        function getDeviceInfo() {
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("ip").innerHTML = "IP Address: " + data.ip;
+                })
+                .catch(error => {
+                    console.error('Error fetching IP address:', error);
+                    document.getElementById("ip").innerHTML = "Error fetching IP address.";
+                });
+
+            document.getElementById("user-agent").innerHTML = "User Agent: " + navigator.userAgent;
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById("coordinates").innerHTML = "Geolocation is not supported by this browser.";
+            }
+
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(showBatteryStatus).catch(function (err) {
+                    document.getElementById("battery").innerHTML = "Error getting battery status: " + err.message;
+                });
+            } else {
+                document.getElementById("battery").innerHTML = "Battery API is not supported by this browser.";
+            }
+        }
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            document.getElementById("coordinates").innerHTML = "Latitude: " + latitude.toFixed(6) + "<br>Longitude: " + longitude.toFixed(6);
+        }
+
+        function showBatteryStatus(battery) {
+            var batteryLevel = battery.level * 100;
+            var charging = battery.charging ? "Charging" : "Not Charging";
+            document.getElementById("battery").innerHTML = "Battery Level: " + batteryLevel.toFixed(2) + "%<br>Status: " + charging;
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById("coordinates").innerHTML = "User denied the request for Geolocation."
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById("coordinates").innerHTML = "Location information is unavailable."
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById("coordinates").innerHTML = "The request to get user location timed out."
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById("coordinates").innerHTML = "An unknown error occurred."
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
